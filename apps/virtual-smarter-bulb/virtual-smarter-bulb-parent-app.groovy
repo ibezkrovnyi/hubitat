@@ -42,7 +42,7 @@ definition(
   iconUrl: '',
   iconX2Url: '',
   iconX3Url: '',
-  importUrl: '',
+  importUrl: 'https://raw.githubusercontent.com/ibezkrovnyi/hubitat/main/apps/virtual-smarter-bulb/virtual-smarter-bulb-parent-app.groovy',
 )
 
 preferences {
