@@ -40,7 +40,7 @@ definition(
   name: "Virtual - ${PROJECT_NAME} (Child)",
   namespace: PROJECT_NAMESPACE,
   author: 'Igor Bezkrovnyi',
-  description: "Group Bulbs and change their dimming level, color temperature and color without triggering bulb ON",
+  description: "Group Bulbs to change their dimming level, color temperature and color without triggering bulb On",
   category: CATEGORY,
   parent: "${PROJECT_NAMESPACE}:Virtual - ${PROJECT_NAME} (Parent)",
   filename: 'virtual-smarter-bulb-child-app.groovy',
