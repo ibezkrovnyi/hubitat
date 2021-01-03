@@ -194,28 +194,10 @@ private updateAttribute(device, attributeName, attributeValue) {
     def value = convert.eventValueToAttributeValue(attributeValue)
     logInfo "updateAttribute - set ${attributeName}=${value} (event.value=${attributeValue}) using command=${command} for device with dni=${device.deviceNetworkId}"
     device."${command}"(value)
+    pauseExecution(210)
   } else {
     logInfo "updateAttribute - ${attributeName} isn't supported by device with dni=${device.deviceNetworkId}, skipping update..."
   }
-  // switch (attributeName) {
-  //   case 'level':
-  //     if (device.hasCommand('setLevel')) {
-  //       logInfo "updateAttribute - set ${attributeName}=${attributeValue} (${toInt(attributeValue)}) for device with dni=${device.deviceNetworkId}"
-  //       device.setLevel(toInt(attributeValue))
-  //     } else {
-  //       logInfo "updateAttribute - ${attributeName} isn't supported by device with dni=${device.deviceNetworkId}"
-  //     }
-  //     break
-  //   case 'colorTemperature':
-  //     if (device.hasCommand('setColorTemperature')) device.setColorTemperature(toInt(attributeValue))
-  //     break
-  //   case 'hue':
-  //     if (device.hasCommand('setHue')) device.setHue(toInt(attributeValue))
-  //     break
-  //   case 'saturation':
-  //     if (device.hasCommand('setSaturation')) device.setSaturation(toInt(attributeValue))
-  //     break
-  // }
 }
 
 @Field static Object masterHandlerMutex = new Object()
