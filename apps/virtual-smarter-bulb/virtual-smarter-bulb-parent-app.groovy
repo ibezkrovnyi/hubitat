@@ -72,6 +72,8 @@ void initialize() {
 
 def configurationPage() {
   dynamicPage(name: 'configurationPage') {
+    section("Application: <b>${PROJECT_NAME}(Parent)@${VERSION}</b>") {
+    }
     if (app.getInstallationState() != 'COMPLETE') {
       section { paragraph "Click 'Done' to install <b>${app.label}</b> parent app" }
     } else {
