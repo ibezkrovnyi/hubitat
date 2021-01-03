@@ -22,9 +22,12 @@
  *    ... PLEASE PUT HERE YOUR CREDITS AND CHANGE LIST IF YOU MODIFY THIS FILE ...
  *
  *  ==== CHANGES ===================================
+ *  1.0.2 - 2020-01-03 - Add more logs, add version, cleanup
  *  1.0.1 - 2020-01-02 - Initial release
  */
 import groovy.transform.Field
+
+@Field static String VERSION = '1.0.2'
 
 @Field static String PROJECT_NAME = 'Smarter Bulb'
 @Field static String PROJECT_NAMESPACE = 'ibezkrovnyi'
@@ -84,7 +87,7 @@ def configurationPage() {
     }
   }
 }
-private logDebug(message) { log.debug "${app.label}: ${message}" }
-private logInfo(message) { log.info "${app.label}: ${message}" }
-private logWarn(message) { log.warn "${app.label}: ${message}" }
-private logError(message) { log.error "${app.label}: ${message}" }
+private logDebug(message) { log.debug "${PROJECT_NAME}(Parent)@${VERSION}: ${message}" }
+private logInfo(message) { log.info "${PROJECT_NAME}(Parent)@${VERSION}: ${message}" }
+private logWarn(message) { log.warn "${PROJECT_NAME}(Parent)@${VERSION}: ${message}" }
+private logError(message) { log.error "${PROJECT_NAME}(Parent)@${VERSION}: ${message}" }
