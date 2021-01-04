@@ -311,5 +311,5 @@ private logError(message) { log.error "${PROJECT_NAME}@${VERSION}: ${message}" }
   bold: { "<b>${it}</b>" },
   red: { "<span style='color: red'>${it}</span>" },
   grey: { "<span style='color: grey'>${it}</span>" },
-  indent: { "<span style='padding-left: 10px'>${it}</span>" }
+  indent: { "<div style='padding-left: 10px'>${it}</div>" }
 ]
