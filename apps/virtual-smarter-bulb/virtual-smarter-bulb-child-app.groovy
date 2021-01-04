@@ -22,9 +22,12 @@
  *    ... PLEASE PUT HERE YOUR CREDITS AND CHANGE LIST IF YOU MODIFY THIS FILE ...
  *
  *  ==== CHANGES ===================================
+ *  1.0.2 - 2020-01-03 - Add more logs, add version, cleanup
  *  1.0.1 - 2020-01-02 - Initial release
  */
 import groovy.transform.Field
+
+@Field static String VERSION = '1.0.2'
 
 // @Field static String DRIVER_NAME = 'Virtual - Smarter Bulb'
 // @Field static String DRIVER_NAMESPACE = 'ibezkrovnyi'
@@ -35,6 +38,27 @@ import groovy.transform.Field
 @Field static String CATEGORY = 'My Apps'
 
 @Field static ArrayList<String> SUPPORTED_ATTRIBUTES = ['level', 'colorTemperature', 'hue', 'saturation']
+
+private getATTRIBUTE_TO_COMMAND() {
+  [
+    'level': [
+      command: 'setLevel',
+      eventValueToAttributeValue: { toInt it },
+    ],
+    'hue': [
+      command: 'setHue',
+      eventValueToAttributeValue: { toInt it },
+    ],
+    'saturation': [
+      command: 'setSaturation',
+      eventValueToAttributeValue: { toInt it },
+    ],
+    'colorTemperature': [
+      command: 'setColorTemperature',
+      eventValueToAttributeValue: { toInt it },
+    ],
+  ]
+}
 
 definition(
   name: "Virtual - ${PROJECT_NAME} (Child)",
@@ -56,6 +80,8 @@ preferences {
 
 def configurationPage() {
   dynamicPage(name: 'configurationPage') {
+    section("Application: <b>${PROJECT_NAME}@${VERSION}</b>") {
+    }
     section('Control these Bulbs:') {
       input 'slaves', 'capability.switch', multiple: true, title: 'Select Bulbs to Control...', required: true, submitOnChange: true
     }
@@ -121,7 +147,7 @@ private installHandlers(ignoredMasterDevice = null) {
 @Field static Object slavesHandlerMutex = new Object()
 void slavesHandler(event) {
   synchronized (slavesHandlerMutex) {
-    logInfo "slavesHandler name=${event.name} value=${event.value}"
+    // logInfo "slavesHandler name=${event.name} value=${event.value}"
     def slave = event.getDevice()
     if (event.name == 'switch' && event.value == 'on') {
       updateDevice(slave)
@@ -150,25 +176,27 @@ private updateDevice(slave) {
     def prevValue = data.attributes[it]
     def currentValue = master.currentValue(it)
     if (prevValue != currentValue) {
+      logTrace "updateDevice - device with dni=${slave.deviceNetworkId} switched On, apply pending ${it}=${currentValue} change"
       updateAttribute(slave, it, currentValue)
     }
   }
 }
 
 private updateAttribute(device, attributeName, attributeValue) {
-  switch (attributeName) {
-    case 'level':
-      if (device.hasCommand('setLevel')) device.setLevel(toInt(attributeValue))
-      break
-    case 'colorTemperature':
-      if (device.hasCommand('setColorTemperature')) device.setColorTemperature(toInt(attributeValue))
-      break
-    case 'hue':
-      if (device.hasCommand('setHue')) device.setHue(toInt(attributeValue))
-      break
-    case 'saturation':
-      if (device.hasCommand('setSaturation')) device.setSaturation(toInt(attributeValue))
-      break
+  def convert = ATTRIBUTE_TO_COMMAND[attributeName]
+  if (!convert) {
+    logTrace "updateAttribute - ${attributeName} isn't supported by app, dni=${device.deviceNetworkId}, skipping update..."
+    return
+  }
+
+  def command = convert.command
+  if (device.hasCommand(command)) {
+    def value = convert.eventValueToAttributeValue(attributeValue)
+    logInfo "updateAttribute - set ${attributeName}=${value} (event.value=${attributeValue}) using command=${command} for device with dni=${device.deviceNetworkId}"
+    device."${command}"(value)
+    pauseExecution(210)
+  } else {
+    logInfo "updateAttribute - ${attributeName} isn't supported by device with dni=${device.deviceNetworkId}, skipping update..."
   }
 }
 
@@ -238,8 +266,8 @@ private toInt(value) {
   new BigDecimal(value).intValue()
 }
 private getLogsEnabled() { true }
-private logTrace(message) { if (logsEnabled) log.trace "${PROJECT_NAME}: ${message}" }
-private logDebug(message) { if (logsEnabled) log.debug "${PROJECT_NAME}: ${message}" }
-private logInfo(message) { if (logsEnabled) log.info "${PROJECT_NAME}: ${message}" }
-private logWarn(message) { log.warn "${PROJECT_NAME}: ${message}" }
-private logError(message) { log.error "${PROJECT_NAME}: ${message}" }
+private logTrace(message) { if (logsEnabled) log.trace "${PROJECT_NAME}@${VERSION}: ${message}" }
+private logDebug(message) { if (logsEnabled) log.debug "${PROJECT_NAME}@${VERSION}: ${message}" }
+private logInfo(message) { if (logsEnabled) log.info "${PROJECT_NAME}@${VERSION}: ${message}" }
+private logWarn(message) { log.warn "${PROJECT_NAME}@${VERSION}: ${message}" }
+private logError(message) { log.error "${PROJECT_NAME}@${VERSION}: ${message}" }
