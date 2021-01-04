@@ -22,12 +22,13 @@
  *    ... PLEASE PUT HERE YOUR CREDITS AND CHANGE LIST IF YOU MODIFY THIS FILE ...
  *
  *  ==== CHANGES ===================================
- *  1.0.2 - 2020-01-03 - Add more logs, add version, cleanup
+ *  1.0.3 - 2020-01-04 - Add configuration options to enable/disable logs and to change pauseExecution delay, add styling
+ *  1.0.2 - 2020-01-03 - Add more logs, add version, cleanup, pauseExecution(200 ms) after every issued command
  *  1.0.1 - 2020-01-02 - Initial release
  */
 import groovy.transform.Field
 
-@Field static String VERSION = '1.0.2'
+@Field static String VERSION = '1.0.3'
 
 // @Field static String DRIVER_NAME = 'Virtual - Smarter Bulb'
 // @Field static String DRIVER_NAMESPACE = 'ibezkrovnyi'
@@ -80,18 +81,18 @@ preferences {
 
 def configurationPage() {
   dynamicPage(name: 'configurationPage') {
-    section("Application: <b>${PROJECT_NAME}@${VERSION}</b>") {
+    section("<div style='text-align: right; margin-top: -34px'>Application: ${s.bold("${PROJECT_NAME}@${VERSION}")}</div>") {
     }
-    section('Control these Bulbs:') {
+    section(s.section('Control these Bulbs:')) {
       input 'slaves', 'capability.switch', multiple: true, title: 'Select Bulbs to Control...', required: true, submitOnChange: true
     }
-    section("By using this <b>${DRIVER_NAME}</b> Master device:") {
+    section(s.section("By using this ${s.bold(DRIVER_NAME)} Master device:")) {
       input "useExistingMasterDevice", "bool", title: "Create a new master device with driver ${DRIVER_NAME} <b>(off)</b> or use existing one <b>(on)</b>", defaultValue: false, submitOnChange: true
       if (slaves) {
         if (!useExistingMasterDevice) {
           def defaultMasterDeviceName = "${PROJECT_NAME} - ${slaves?.label?.join(' and ')}"
           if (!newMasterDeviceName) app.updateSetting('newMasterDeviceName', defaultMasterDeviceName)
-          input "newMasterDeviceName", "text", title: "<b>DEVICE NAME</b> (optional)", defaultValue: defaultMasterDeviceName, required: false, submitOnChange: true
+          input "newMasterDeviceName", "text", title: s.section('DEVICE NAME ' + s.grey('(optional)')) + s.eol(), defaultValue: defaultMasterDeviceName, required: false, submitOnChange: true
           createMasterDevice(newMasterDeviceName ?: defaultMasterDeviceName)
           paragraph "Creation status=${atomicState.masterDeviceCreationStatus}"
         } else {
@@ -106,7 +107,7 @@ def configurationPage() {
 
     def showAppLabelSection = useExistingMasterDevice ? !!existingMaster : atomicState.masterDeviceNetworkId != null
     if (showAppLabelSection) {
-      section('<b>CHILD APP NAME</b> (optional)') {
+      section(s.section('CHILD APP NAME ' + s.grey('(optional)'))) {
         def master = getMasterDevice()
         if (master) {
           label title: '', description: master.displayName, required: false
@@ -114,7 +115,29 @@ def configurationPage() {
         }
       }
     } else {
-      section('No MASTER DEVICE YET') {}
+      section(s.red('No MASTER DEVICE YET')) {}
+    }
+
+    section(s.section('Options')) {
+      input "logsEnabled", "bool", title: "Enable ALL logs", defaultValue: false, submitOnChange: true
+      paragraph(
+        s.bold("Pause between commands") +
+        s.eol() +
+        s.indent(
+          s.italic(
+            "Best results are achieved when pause time is set to 0" +
+            s.eol() +
+            "However some bulbs' drivers can't process commands issued immediately, without delay." + 
+            s.eol() +
+            "If this is the case then you might observe random attributes are not set." +
+            s.eol() +
+            "E.g. some of the selected bulbs will not change its color or will change color to wrong one." +
+            s.eol() +
+            "To address this you might want to set the below pause time to 200+ ms"
+          )
+        )
+      )
+      input "pauseTime", "number", title: "Pause between commands, milliseconds", defaultValue: 211, range: "0..3000", required: true, submitOnChange: true
     }
   }
 }
@@ -194,7 +217,9 @@ private updateAttribute(device, attributeName, attributeValue) {
     def value = convert.eventValueToAttributeValue(attributeValue)
     logInfo "updateAttribute - set ${attributeName}=${value} (event.value=${attributeValue}) using command=${command} for device with dni=${device.deviceNetworkId}"
     device."${command}"(value)
-    pauseExecution(210)
+    if (pauseTime != null && pauseTime > 0) {
+      pauseExecution(pauseTime)
+    }
   } else {
     logInfo "updateAttribute - ${attributeName} isn't supported by device with dni=${device.deviceNetworkId}, skipping update..."
   }
@@ -265,9 +290,26 @@ private deleteMasterDevice() {
 private toInt(value) {
   new BigDecimal(value).intValue()
 }
-private getLogsEnabled() { true }
 private logTrace(message) { if (logsEnabled) log.trace "${PROJECT_NAME}@${VERSION}: ${message}" }
 private logDebug(message) { if (logsEnabled) log.debug "${PROJECT_NAME}@${VERSION}: ${message}" }
 private logInfo(message) { if (logsEnabled) log.info "${PROJECT_NAME}@${VERSION}: ${message}" }
 private logWarn(message) { log.warn "${PROJECT_NAME}@${VERSION}: ${message}" }
 private logError(message) { log.error "${PROJECT_NAME}@${VERSION}: ${message}" }
+
+@Field static def s = [
+  section: { "<div style='color: white; font-weight: bold; background-color: rgb(129, 188, 0); padding: 3px 15px; box-shadow: 2px 3px 4px #A9A9A9; border-radius: 6px; margin: -13px -10px; text-transform: uppercase'>${it}</div>" },
+  h1: { "<h1>${it}</h1>" },
+  h2: { "<h2>${it}</h2>" },
+  h3: { "<h3>${it}</h3>" },
+  hr: { "<hr/>" },
+  a: { label, url -> "<a href=\"${url}\">${label}</a>" },
+  div: { "<div>${it}</div>" },
+  eol: { "<br/>" },
+  li: { "<ul style=\"margin-top: 5px; margin-bottom: 8px\"><li>${it}</li></ul>" },
+  p: { "<p>${it}</p>" },
+  italic: { "<i>${it}</i>" },
+  bold: { "<b>${it}</b>" },
+  red: { "<span style='color: red'>${it}</span>" },
+  grey: { "<span style='color: grey'>${it}</span>" },
+  indent: { "<span style='padding-left: 10px'>${it}</span>" }
+]

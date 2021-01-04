@@ -22,12 +22,13 @@
  *    ... PLEASE PUT HERE YOUR CREDITS AND CHANGE LIST IF YOU MODIFY THIS FILE ...
  *
  *  ==== CHANGES ===================================
+ *  1.0.3 - no changes in Parent App, changes are only in Child App
  *  1.0.2 - 2020-01-03 - Add more logs, add version, cleanup
  *  1.0.1 - 2020-01-02 - Initial release
  */
 import groovy.transform.Field
 
-@Field static String VERSION = '1.0.2'
+@Field static String VERSION = '1.0.3'
 
 @Field static String PROJECT_NAME = 'Smarter Bulb'
 @Field static String PROJECT_NAMESPACE = 'ibezkrovnyi'
